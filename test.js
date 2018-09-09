@@ -13,7 +13,7 @@ googleMapsClient.geocode({
 */
 let apiKey = '6d597adf5b2e9548c15a8d856286086b';
 let city = 'buffalo';
-let url = `http://api.openweathermap.org/data/2.5/weather?q=${city}&units=imperial&appid=${apiKey}`
+let url = `http://api.openweathermap.org/data/2.5/weather?lat=35&lon=139&units=imperial&appid=${apiKey}`
 const request = require('request');
 request(url, function (err, response, body) {
   if(err){
