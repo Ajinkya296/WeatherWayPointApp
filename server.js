@@ -6,20 +6,21 @@ const request = require('request');
 
 function getWeatherInCity(city)
 {
-  var info
-  request(url+`&q=${city}`, function (err, response, body) {
+
+  return new Promise(function(resolve, reject) {
+  request(url+`&q=${city}`, async function (err, response, body) {
     if(err){
+      reject(err)
       console.log('error:', error);
     }
     else {
       let weather = JSON.parse(body)
       let message = `It's ${weather.main.temp} degrees in ${weather.name}!`;
-      info    = weather.main.temp;
-
+      let info    =  weather.main.temp;
+      resolve(info)
     }
-  });
-console.log(info)
-return info
+  })
+})
 }
 
 
@@ -33,11 +34,19 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.get('/', (request, response) => {
   response.send('Hello from Express!')
 })
-app.post('/submit',async (request, response) => {
-  let temp = await getWeatherInCity(request.body.city)
+app.post('/submit', (request, response) => {
+  var temp
+  let weather_promise =  getWeatherInCity(request.body.city)
+  weather_promise.then(function(result){
+    temp = result
   console.log('--'+temp)
-  response.send('Its'+ temp + ' in ' +request.body.city)
+  response.send('Its '+ temp + ' in ' +request.body.city)
+  },function(err) {
+        console.log(err);
+    })
 })
+
+
 app.listen(port, (err) => {
   if (err) {
     return console.log('something bad happened', err)
