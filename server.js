@@ -8,10 +8,13 @@ function getWeatherInCity(city)
 {
 
   return new Promise(function(resolve, reject) {
-  request(url+`&q=${city}`, async function (err, response, body) {
+  req_url = url+`&q=${city}`
+
+  console.log(req_url)
+  request(req_url, function (err, response, body) {
     if(err){
+      console.log('ERROR:', error);
       reject(err)
-      console.log('error:', error);
     }
     else {
       let weather = JSON.parse(body)
@@ -26,24 +29,31 @@ function getWeatherInCity(city)
 
 const express = require('express')
 var bodyParser = require('body-parser');
+
 const app = express()
 const port = 3000
+var cors = require('cors')
 
+app.use(cors())
 app.use(bodyParser.urlencoded({ extended: true }));
 
+app.use(bodyParser.urlencoded({ extended: true }));
 app.get('/', (request, response) => {
   response.send('Hello from Express!')
 })
 app.post('/submit', (request, response) => {
   var temp
-  let weather_promise =  getWeatherInCity(request.body.city)
+  let weather_promise =  getWeatherInCity(request.query.city)
   weather_promise.then(function(result){
     temp = result
   console.log('--'+temp)
-  response.send('Its '+ temp + ' in ' +request.body.city)
+  response.send('Its '+ temp + ' in ' +request.query.city)
   },function(err) {
         console.log(err);
     })
+  weather_promise.catch(function(error) {
+  console.log(error);
+});
 })
 
 
