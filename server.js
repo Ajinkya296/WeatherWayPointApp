@@ -1,6 +1,8 @@
 // content of index.js
-let apiKey = '6d597adf5b2e9548c15a8d856286086b';
-let url = `http://api.openweathermap.org/data/2.5/weather?&units=imperial&appid=${apiKey}`
+let weatherapiKey = '6d597adf5b2e9548c15a8d856286086b';
+let mapapiKey     =  'AIzaSyBNmXtV61112WJDnpctz8jBKc_ByTiUUf4 '
+let weather_url = `http://api.openweathermap.org/data/2.5/weather?&units=imperial&appid=${weatherapiKey}`
+let map_url     = `https://maps.googleapis.com/maps/api/directions/json?key=AIzaSyBNmXtV61112WJDnpctz8jBKc_ByTiUUf4`
 const request = require('request');
 
 
@@ -8,9 +10,8 @@ function getWeatherInCity(city)
 {
 
   return new Promise(function(resolve, reject) {
-  req_url = url+`&q=${city}`
+  req_url = weather_url+`&q=${city}`
 
-  console.log(req_url)
   request(req_url, function (err, response, body) {
     if(err){
       console.log('ERROR:', error);
@@ -26,6 +27,24 @@ function getWeatherInCity(city)
 })
 }
 
+function getRouteAtoB(ptA, ptB)
+{
+
+  return new Promise(function(resolve, reject) {
+  req_url = map_url+`&origin=${ptA}&destination=${ptB}`
+
+  request(req_url, function (err, response, body) {
+    if(err){
+      console.log('ERROR:', error);
+      reject(err)
+    }
+    else {
+      let map_json = JSON.parse(body)
+      resolve(body)
+    }
+  })
+})
+}
 
 const express = require('express')
 var bodyParser = require('body-parser');
@@ -38,9 +57,11 @@ app.use(cors())
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(bodyParser.urlencoded({ extended: true }));
+
 app.get('/', (request, response) => {
   response.send('Hello from Express!')
 })
+
 app.post('/submit', (request, response) => {
   var temp
   let weather_promise =  getWeatherInCity(request.query.city)
@@ -56,6 +77,18 @@ app.post('/submit', (request, response) => {
 });
 })
 
+app.post('/route', (request, response) => {
+  let map_promise =  getRouteAtoB(request.query.A , request.query.B)
+  map_promise.then(function(result){
+    console.log(result)
+  response.send(result)
+  },function(err) {
+        console.log(err);
+    })
+  map_promise.catch(function(error) {
+  console.log(error);
+});
+})
 
 app.listen(port, (err) => {
   if (err) {
