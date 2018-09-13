@@ -7,10 +7,16 @@ function submit_city()
 
 var bounds = new google.maps.LatLngBounds();
 
+var polyline
 
 function render_route(response,map)
 {
 
+  if(polyline != undefined)
+  {
+    console.log("Removed")
+    polyline.setMap(null);
+  }
   var lat
   var lng
   jsonData =  response.data.routes[0].overview_polyline
@@ -20,7 +26,7 @@ function render_route(response,map)
   }
   map.panTo(path[0])
   map.fitBounds(bounds);
-  var polyline = new google.maps.Polyline({
+  polyline = new google.maps.Polyline({
     path: path,
     strokeColor: '#FF0000',
     strokeOpacity: 0.8,
@@ -37,7 +43,7 @@ function render_route(response,map)
 
 function submit_points()
 {
-      initialize()
+      //initialize()
       console.log("Clicked")
       url = "http://127.0.0.1:3000/route?" + "A=" +document.getElementById("origin").value + "&B=" +document.getElementById("dest").value
 

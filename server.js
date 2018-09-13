@@ -80,7 +80,6 @@ app.post('/submit', (request, response) => {
 app.post('/route', (request, response) => {
   let map_promise =  getRouteAtoB(request.query.A , request.query.B)
   map_promise.then(function(result){
-    console.log(result)
   response.send(result)
   },function(err) {
         console.log(err);
