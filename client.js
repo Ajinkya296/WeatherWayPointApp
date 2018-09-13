@@ -10,14 +10,26 @@ var bounds = new google.maps.LatLngBounds();
 
 function render_route(response,map)
 {
-  console.log(response)
+
+  var lat
+  var lng
   jsonData =  response.data.routes[0].overview_polyline
   var path = google.maps.geometry.encoding.decodePath(jsonData.points);
-  console.log(path)
   for (var i = 0; i < path.length; i++) {
     bounds.extend(path[i]);
-  }
+  } /*
+  var geocoder =  new google.maps.Geocoder();
+geocoder.geocode( { 'address': }, function(results, status) {
+      if (status == google.maps.GeocoderStatus.OK) {
+        lat  =  results[0].geometry.location.lat()
+        lng  = results[0].geometry.location.lng()
+      } else {
+        alert("Something got wrong " + status);
+      }
+    });*/
+  console.log(lat)
 
+  map.panTo(path[0])
   var polyline = new google.maps.Polyline({
     path: path,
     strokeColor: '#FF0000',
@@ -31,8 +43,6 @@ function render_route(response,map)
       // strokeWeight: 2
   });
   polyline.setMap(map);
-  //map.fitBounds(bounds);
-
 }
 
 function submit_points()
@@ -40,8 +50,9 @@ function submit_points()
       initialize()
       console.log("Clicked")
       url = "http://127.0.0.1:3000/route?" + "A=" +document.getElementById("origin").value + "&B=" +document.getElementById("dest").value
-      console.log(url)
+
       axios.post(url).then(response =>  render_route(response,map));
+
 }
 /*
 function initMap() {
