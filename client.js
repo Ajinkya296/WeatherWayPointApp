@@ -8,7 +8,7 @@ function submit_city()
 var bounds = new google.maps.LatLngBounds();
 
 var polyline
-
+var markers
 function render_route(response,map)
 {
 
@@ -16,6 +16,14 @@ function render_route(response,map)
   {
     console.log("Removed")
     polyline.setMap(null);
+  }
+  if(markers != undefined)
+  {
+    for(i = 0 ; i < markers.length ; i++)
+    {
+      if (markers[i] != undefined)
+        markers[i].setMap(null)
+    }
   }
   var lat
   var lng
@@ -39,6 +47,42 @@ function render_route(response,map)
       // strokeWeight: 2
   });
   polyline.setMap(map);
+
+  var service = new google.maps.DistanceMatrixService();
+  service.getDistanceMatrix(
+  {
+    origins: [path[0]],
+    destinations: [path[path.length-1]],
+    travelMode: 'DRIVING'
+  }, callback);
+
+function callback(response, status) {
+  document.getElementById("result").innerHTML = "Distance is " + response.rows[0].elements[0].distance.text + "\n" + "Time required " + response.rows[0].elements[0].duration.text
+}
+  //---------------------- Splitting waypoints----------
+  waypoints = []
+  markers   = []
+  interval =  parseInt(path.length/4)
+  for(i=0;i<path.length;i+=interval)
+  {
+    waypoints.push(path[i])
+  }
+  waypoints.push(path[path.length-1])
+  console.log(waypoints)
+  for(i = 0 ; i < waypoints.length;i++)
+  {
+    var waypoint = waypoints[i]
+    var marker =new google.maps.Marker({
+          position: waypoint,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8
+          },
+          draggable: false,
+          map: map
+        });
+        markers.push(marker)
+    }
 }
 
 function submit_points()
