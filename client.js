@@ -17,19 +17,9 @@ function render_route(response,map)
   var path = google.maps.geometry.encoding.decodePath(jsonData.points);
   for (var i = 0; i < path.length; i++) {
     bounds.extend(path[i]);
-  } /*
-  var geocoder =  new google.maps.Geocoder();
-geocoder.geocode( { 'address': }, function(results, status) {
-      if (status == google.maps.GeocoderStatus.OK) {
-        lat  =  results[0].geometry.location.lat()
-        lng  = results[0].geometry.location.lng()
-      } else {
-        alert("Something got wrong " + status);
-      }
-    });*/
-  console.log(lat)
-
+  }
   map.panTo(path[0])
+  map.fitBounds(bounds);
   var polyline = new google.maps.Polyline({
     path: path,
     strokeColor: '#FF0000',
