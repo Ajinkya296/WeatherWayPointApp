@@ -60,6 +60,22 @@ function callback(response, status) {
   document.getElementById("result").innerHTML = "Distance is " + response.rows[0].elements[0].distance.text + "\n" + "Time required " + response.rows[0].elements[0].duration.text
 }
   //---------------------- Splitting waypoints----------
+  var contentString =   '<div id="content" style= " margin-left : -20% ;overflow:hidden">'+
+       '<img src="weather_icons/clear.svg" style= " margin_x : -4%" height="32" width="32"> '+
+       '<p>hi</p>' +
+       '</div>'
+
+
+       var image = {
+              url: 'amcharts_weather_icons_1.0.0/static/day.svg',
+              // This marker is 20 pixels wide by 32 pixels high.
+              size: new google.maps.Size(64, 64),
+              // The origin for this image is (0, 0).
+              origin: new google.maps.Point(0, 0),
+              // The anchor for this image is the base of the flagpole at (0, 32).
+              anchor: new google.maps.Point(32,45)
+            };
+
   waypoints = []
   markers   = []
   interval =  parseInt(path.length/4)
@@ -72,15 +88,23 @@ function callback(response, status) {
   for(i = 0 ; i < waypoints.length;i++)
   {
     var waypoint = waypoints[i]
-    var marker =new google.maps.Marker({
+
+    var marker = new google.maps.Marker({
           position: waypoint,
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 8
-          },
+          icon: image,
           draggable: false,
+          label: '',
           map: map
-        });
+        }
+
+      );
+        var infowindow = new google.maps.InfoWindow();
+        google.maps.event.addListener(marker,'click', (function(marker,contentString,infowindow){
+    return function() {
+        infowindow.setContent(contentString);
+        infowindow.open(map,marker);
+    };
+})(marker,contentString,infowindow));
         markers.push(marker)
     }
 }
@@ -90,7 +114,6 @@ function submit_points()
       //initialize()
       console.log("Clicked")
       url = "http://127.0.0.1:3000/route?" + "A=" +document.getElementById("origin").value + "&B=" +document.getElementById("dest").value
-
       axios.post(url).then(response =>  render_route(response,map));
 
 }
