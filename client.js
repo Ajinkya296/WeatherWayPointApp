@@ -4,9 +4,41 @@ function submit_city()
   url = "http://127.0.0.1:3000/submit?" + "city=" +document.getElementById("city").value
   axios.post(url).then(response => console.log(response.data));
 }
+function CapitlizeString(word)
+{
+    return word.charAt(0).toUpperCase() + word.slice(1);
+}
+function round(num,dec)
+{
+  d = Math.pow(10, dec)
+  return Math.round(num*d)/d
+}
+function weather_latlon(lat,lon)
+{
+  var temperature
+  var wind
+  var wind_dir
+  var weather_desc
+  url = "http://127.0.0.1:3000/weather_latlon?" + "lat=" +lat + "&lon=" +lon
+
+  var xhttp = new XMLHttpRequest();
+  xhttp.open("POST", url, false);
+  xhttp.send()
+  response = JSON.parse(xhttp.responseText)
+  temperature = response.main.temp
+  wind  = response.wind
+  weather_summ =  response.weather[0].main
+  weather_desc =  response.weather[0].description
+  return {temperature,wind,weather_summ,weather_desc}
+  /*
+  return  axios.post(url).then( response => {
+                                    return response.data//
+                                  });
+  console.log({temperature,wind,weather_desc})
+*/
+}
 
 var bounds = new google.maps.LatLngBounds();
-
 var polyline
 var markers
 function render_route(response,map)
@@ -60,21 +92,18 @@ function callback(response, status) {
   document.getElementById("result").innerHTML = "Distance is " + response.rows[0].elements[0].distance.text + "\n" + "Time required " + response.rows[0].elements[0].duration.text
 }
   //---------------------- Splitting waypoints----------
-  var contentString =   '<div id="content" style= " margin-left : -20% ;overflow:hidden">'+
-       '<img src="weather_icons/clear.svg" style= " margin_x : -4%" height="32" width="32"> '+
-       '<p>hi</p>' +
-       '</div>'
 
+  var icons = {
+  clear       :  'weather_icons/clear.svg',
+  low_cloudy  :  'weather_icons/cloudy-day-1.svg',
+  high_cloudy :  'weather_icons/cloudy-day-3.svg',
+  light_rain  :  'weather_icons/rainy-4.svg',
+  heavy_rain  :  'weather_icons/rainy-7.svg',
+  snow        :  'weather_icons/snow.svg',
+  fog         :  'weather_icons/fog.svg',
+  hazy        :  'weather_icons/hazy.svg'
+  }
 
-       var image = {
-              url: 'amcharts_weather_icons_1.0.0/static/day.svg',
-              // This marker is 20 pixels wide by 32 pixels high.
-              size: new google.maps.Size(64, 64),
-              // The origin for this image is (0, 0).
-              origin: new google.maps.Point(0, 0),
-              // The anchor for this image is the base of the flagpole at (0, 32).
-              anchor: new google.maps.Point(32,45)
-            };
 
   waypoints = []
   markers   = []
@@ -84,27 +113,70 @@ function callback(response, status) {
     waypoints.push(path[i])
   }
   waypoints.push(path[path.length-1])
-  console.log(waypoints)
+  weather_info = []
+  for(i = 0 ; i < waypoints.length;i++)
+  {
+    lat = round(waypoints[i].lat(),2 )
+    lon = round(waypoints[i].lng(),2 )
+
+    weather_info[i] =   weather_latlon(lat,lon)
+    if (weather_info[i].weather_desc.includes('mist'))
+      weather_info[i].icon = icons.fog
+    else if (weather_info[i].weather_desc.includes('haze'))
+        weather_info[i].icon = icons.hazy
+    else if (weather_info[i].weather_desc.includes('cloud'))
+        if (weather_info[i].weather_desc.includes('overcast') )
+          weather_info[i].icon = icons.high_cloudy
+        else {
+          weather_info[i].icon = icons.low_cloudy
+        }
+    else if (weather_info[i].weather_desc.includes('rain'))
+        if (weather_info[i].weather_desc.includes('light') )
+          weather_info[i].icon = icons.light_rain
+        else {
+          weather_info[i].icon = icons.heavy_rain
+        }
+    else {
+      weather_info[i].icon = icons.clear
+    }
+    console.log(weather_info[i])
+  }
+  console.log(weather_info)
   for(i = 0 ; i < waypoints.length;i++)
   {
     var waypoint = waypoints[i]
 
     var marker = new google.maps.Marker({
           position: waypoint,
-          icon: image,
+          icon: {
+      path: google.maps.SymbolPath.CIRCLE,
+      scale: 6,
+      fillColor: 'yellow',
+    fillOpacity: 0.8,
+    strokeColor: 'blue',
+    strokeWeight: 2
+    },
           draggable: false,
           label: '',
           map: map
         }
 
       );
-        var infowindow = new google.maps.InfoWindow();
-        google.maps.event.addListener(marker,'click', (function(marker,contentString,infowindow){
-    return function() {
-        infowindow.setContent(contentString);
-        infowindow.open(map,marker);
-    };
-})(marker,contentString,infowindow));
+      var contentString =   '<div id="content" style= " margin-left : -2px ;overflow:hidden;display:inline-block;">'+
+           '<img src=" '+ weather_info[i].icon +'" style= " float:left;" height="32" width="32"> '+
+           '<div style="display:inline-block;">'+
+                '<span>'+ weather_info[i].temperature  +'<sup>o</sup> C '+ CapitlizeString(weather_info[i].weather_desc) +' </span></br>'+
+                '<span> Wind '+ round(weather_info[i].wind.speed * (25/11),1) +' miles/hr </span>'+
+            '</div>' +
+           '</div>'
+
+      var infowindow = new google.maps.InfoWindow();
+      google.maps.event.addListener(marker,'click', (function(marker,contentString,infowindow){
+                    return function() {
+                    infowindow.setContent(contentString);
+                    infowindow.open(map,marker);
+                  };
+                })(marker,contentString,infowindow));
         markers.push(marker)
     }
 }

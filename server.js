@@ -27,6 +27,26 @@ function getWeatherInCity(city)
 })
 }
 
+function getWeatherInLatLon(latitude,longitude)
+{
+
+  return new Promise(function(resolve, reject) {
+  req_url = weather_url+`&lat=${latitude}`+`&lon=${longitude}`
+  console.log(req_url)
+  request(req_url, function (err, response, body) {
+    if(err){
+      console.log('ERROR:', error);
+      reject(err)
+    }
+    else {
+      let weather_response = JSON.parse(body)
+      let info    = weather_response;
+      resolve(info)
+    }
+  })
+})
+}
+
 function getRouteAtoB(ptA, ptB)
 {
 
@@ -39,7 +59,6 @@ function getRouteAtoB(ptA, ptB)
       reject(err)
     }
     else {
-      let map_json = JSON.parse(body)
       resolve(body)
     }
   })
@@ -62,13 +81,29 @@ app.get('/', (request, response) => {
   response.send('Hello from Express!')
 })
 
-app.post('/submit', (request, response) => {
+app.post('/weather_city', (request, response) => {
   var temp
   let weather_promise =  getWeatherInCity(request.query.city)
+  console.log(request)
   weather_promise.then(function(result){
     temp = result
   console.log('--'+temp)
   response.send('Its '+ temp + ' in ' +request.query.city)
+  },function(err) {
+        console.log(err);
+    })
+  weather_promise.catch(function(error) {
+  console.log(error);
+});
+})
+app.post('/weather_latlon', (request, response) => {
+  var temp
+  let weather_promise =  getWeatherInLatLon(request.query.lat,request.query.lon)
+  //console.log(request)
+  weather_promise.then(function(result){
+    temp = result
+  console.log('--'+temp)
+  response.send(result)
   },function(err) {
         console.log(err);
     })
