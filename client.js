@@ -177,6 +177,11 @@ function callback(response, status) {
                     infowindow.open(map,marker);
                   };
                 })(marker,contentString,infowindow));
+      google.maps.event.addListener(marker,'dblclick', (function(marker,contentString,infowindow){
+                    return function() {
+                    infowindow.close();
+                  };
+                })(marker,contentString,infowindow));
         markers.push(marker)
     }
 }
