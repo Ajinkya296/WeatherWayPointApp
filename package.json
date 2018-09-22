@@ -21,6 +21,8 @@
     "@google/maps": "^0.5.5",
     "cors": "^2.8.4",
     "express": "^4.16.3",
-    "request": "^2.88.0"
+    "mongodb": "^3.1.6",
+    "request": "^2.88.0",
+    "xmlhttprequest": "^1.8.0"
   }
 }
