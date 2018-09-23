@@ -14,10 +14,19 @@ var dbo
 MongoClient.connect(url, function(err, db) {
   if (err) throw err;
   dbo = db.db("mydb")
-  dbo.createCollection("routes", function(err, res) {
+  dbo.createCollection("routes_store", function(err, res) {
    if (err) throw err;
    console.log("Collection created!");
 })})
+
+
+function encodeLatLon(point)
+{
+  lat = point.lat
+  lng = point.lng
+  enc = "" + lat + "|" +lng
+  return enc
+}
 function getWeatherInCity(city)
 {
 
@@ -141,26 +150,52 @@ app.post('/route', (req, response) => {
   console.log("source : "+src_point + "source : "+dest_point)
 
 
-
+  let doc_already_exists = false
   //Check if in database
-  
-
-
-  let map_promise =  getRouteAtoB(src_point, dest_point)
-  map_promise.then(function(result){
-  //add in database
-  dbo.collection("routes").insertOne({src_point : result}, function(err, res) {
+  var query = {src:encodeLatLon(src_point) };
+  console.log(query)
+  var filtered_coll = dbo.collection("routes_store").find(query)
+  var a
+  filtered_coll.toArray().then(function (err, result) {
     if (err) throw err;
-    console.log("1 route inserted");
-})
-  response.send(result)
-  },function(err) {
-        console.log(err);
+    a = [1,2,3]
+  })
+  console.log("\n+++++"+ a.length)
+  filtered_coll.count() .then(function(numItems) {
+      if(numItems > 0)
+        {
+          console.log(numItems); // Use this to debug
+          doc_already_exists = true
+          filtered_coll.toArray(function(err, result) {
+            if (err) throw err;
+            res = result[0].route_obj
+            response.send(result)
+          })
+      }
     })
-  map_promise.catch(function(error) {
-  console.log(error);
-});
-})
+
+
+
+    let map_promise =  getRouteAtoB(src_point, dest_point)
+    map_promise.then(function(result){
+    //add in database
+      if (!doc_already_exists){
+          dbo.collection("routes_store").insertOne({ src:encodeLatLon(src_point), route_obj : result}, function(err, res) {
+            if (err) throw err;
+            console.log("1 route inserted at " + encodeLatLon(src_point));
+        })
+      }
+    response.send(result)
+    },function(err) {
+          console.log(err);
+      })
+    map_promise.catch(function(error) {
+    console.log(error);
+  });
+  }
+
+)
+
 app.listen(port, (err) => {
   if (err) {
     return console.log('something bad happened', err)
