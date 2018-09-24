@@ -191,7 +191,9 @@ function submit_points()
       //initialize()
       console.log("Clicked")
       url = "http://127.0.0.1:3000/route?" + "source=" +document.getElementById("origin").value + "&dest="  +document.getElementById("dest").value
-      axios.post(url).then(response =>  render_route(response,map));
+      axios.post(url).then(response => {
+        console.log(response)
+        render_route(response,map) });
 
 }
 /*

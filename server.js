@@ -12,11 +12,11 @@ var url = "mongodb://localhost:27017/mydb";
 var db
 var dbo
 MongoClient.connect(url, function(err, db) {
+if (err) throw err;
+dbo = db.db("mydb")
+dbo.createCollection("routes_store", function(err, res) {
   if (err) throw err;
-  dbo = db.db("mydb")
-  dbo.createCollection("routes_store", function(err, res) {
-   if (err) throw err;
-   console.log("Collection created!");
+  console.log("Collection created!");
 })})
 
 
@@ -31,58 +31,58 @@ function getWeatherInCity(city)
 {
 
   return new Promise(function(resolve, reject) {
-  req_url = weather_url+`&q=${city}`
+    req_url = weather_url+`&q=${city}`
 
-  request(req_url, function (err, response, body) {
-    if(err){
-      console.log('ERROR:', error);
-      reject(err)
-    }
-    else {
-      let weather = JSON.parse(body)
-      let message = `It's ${weather.main.temp} degrees in ${weather.name}!`;
-      let info    =  weather.main.temp;
-      resolve(info)
-    }
+    request(req_url, function (err, response, body) {
+      if(err){
+        console.log('ERROR:', error);
+        reject(err)
+      }
+      else {
+        let weather = JSON.parse(body)
+        let message = `It's ${weather.main.temp} degrees in ${weather.name}!`;
+        let info    =  weather.main.temp;
+        resolve(info)
+      }
+    })
   })
-})
 }
 
 function getWeatherInLatLon(latitude,longitude)
 {
 
   return new Promise(function(resolve, reject) {
-  req_url = weather_url+`&lat=${latitude}`+`&lon=${longitude}`
-  request(req_url, function (err, response, body) {
-    if(err){
-      console.log('ERROR:', error);
-      reject(err)
-    }
-    else {
-      let weather_response = JSON.parse(body)
-      let info    = weather_response;
-      resolve(info)
-    }
+    req_url = weather_url+`&lat=${latitude}`+`&lon=${longitude}`
+    request(req_url, function (err, response, body) {
+      if(err){
+        console.log('ERROR:', error);
+        reject(err)
+      }
+      else {
+        let weather_response = JSON.parse(body)
+        let info    = weather_response;
+        resolve(info)
+      }
+    })
   })
-})
 }
 
 function getRouteAtoB(ptA, ptB)
 {
 
   return new Promise(function(resolve, reject) {
-  req_url = map_url+`&origin=${ptA.lat},${ptA.lng}&destination=${ptB.lat},${ptB.lng}`
+    req_url = map_url+`&origin=${ptA.lat},${ptA.lng}&destination=${ptB.lat},${ptB.lng}`
 
-  request(req_url, function (err, response, body) {
-    if(err){
-      console.log('ERROR:', error);
-      reject(err)
-    }
-    else {
-      resolve(body)
-    }
+    request(req_url, function (err, response, body) {
+      if(err){
+        console.log('ERROR:', error);
+        reject(err)
+      }
+      else {
+        resolve(body)
+      }
+    })
   })
-})
 }
 
 const express = require('express');
@@ -106,29 +106,29 @@ app.post('/weather_city', (request, response) => {
   let weather_promise =  getWeatherInCity(request.query.city)
   weather_promise.then(function(result){
     temp = result
-  console.log('--'+temp)
-  response.send('Its '+ temp + ' in ' +request.query.city)
+    console.log('--'+temp)
+    response.send('Its '+ temp + ' in ' +request.query.city)
   },function(err) {
-        console.log(err);
-    })
+    console.log(err);
+  })
   weather_promise.catch(function(error) {
-  console.log(error);
-});
+    console.log(error);
+  });
 })
 app.post('/weather_latlon', (request, response) => {
   var temp
-   // Print the HTML for the Google homepage.
+  // Print the HTML for the Google homepage.
   let weather_promise =  getWeatherInLatLon(request.query.lat,request.query.lon)
   //console.log(request)
   weather_promise.then(function(result){
     temp = result
-  response.send(result)
+    response.send(result)
   },function(err) {
-        console.log(err);
-    })
+    console.log(err);
+  })
   weather_promise.catch(function(error) {
-  console.log(error);
-});
+    console.log(error);
+  });
 })
 
 app.post('/route', (req, response) => {
@@ -152,49 +152,37 @@ app.post('/route', (req, response) => {
 
   let doc_already_exists = false
   //Check if in database
-  var query = {src:encodeLatLon(src_point) };
-  console.log(query)
-  var filtered_coll = dbo.collection("routes_store").find(query)
+  var query = {src:encodeLatLon(src_point)};
+  var filtered_coll = dbo.collection("routes_store").find(query).limit(1)
   var a
-  filtered_coll.toArray().then(function (err, result) {
+  filtered_coll.toArray(function (err, result) {
     if (err) throw err;
-    a = [1,2,3]
-  })
-  console.log("\n+++++"+ a.length)
-  filtered_coll.count() .then(function(numItems) {
-      if(numItems > 0)
-        {
-          console.log(numItems); // Use this to debug
-          doc_already_exists = true
-          filtered_coll.toArray(function(err, result) {
-            if (err) throw err;
-            res = result[0].route_obj
-            response.send(result)
-          })
-      }
-    })
+    if(result.length != 0)
+    {
+      console.log("Retrived from Database")
+      res_obj = result.route_obj
+      res = result[0].route_obj
+      response.send(res)
+    }
+    else {
 
-
-
-    let map_promise =  getRouteAtoB(src_point, dest_point)
-    map_promise.then(function(result){
-    //add in database
-      if (!doc_already_exists){
-          dbo.collection("routes_store").insertOne({ src:encodeLatLon(src_point), route_obj : result}, function(err, res) {
-            if (err) throw err;
-            console.log("1 route inserted at " + encodeLatLon(src_point));
+      let map_promise =  getRouteAtoB(src_point, dest_point)
+      map_promise.then(function(result){
+        //add in database{
+        dbo.collection("routes_store").insertOne({ src:encodeLatLon(src_point), route_obj : result}, function(err, res) {
+          if (err) throw err;
+          console.log("1 route inserted at " + encodeLatLon(src_point));
         })
-      }
-    response.send(result)
-    },function(err) {
-          console.log(err);
+        response.send(result)
+      },function(err) {
+        console.log(err);
       })
-    map_promise.catch(function(error) {
-    console.log(error);
-  });
-  }
-
-)
+      map_promise.catch(function(error) {
+        console.log(error);
+      })
+    }
+  })
+})
 
 app.listen(port, (err) => {
   if (err) {
