@@ -10,6 +10,7 @@ var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
 function encodeLatLon(pointA,pointB)
 {
+  
   lat_A = pointA.lat
   lng_A = pointA.lng
   lat_B = pointB.lat
