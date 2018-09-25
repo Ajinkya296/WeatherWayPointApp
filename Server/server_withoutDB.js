@@ -7,24 +7,14 @@ let geocode_url = `https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyB
 const request = require('request');
 var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
-var MongoClient = require('mongodb').MongoClient;
-var url = "mongodb://localhost:27017/mydb";
-var db
-var dbo
-MongoClient.connect(url, function(err, db) {
-if (err) throw err;
-dbo = db.db("mydb")
-dbo.createCollection("routes_store", function(err, res) {
-  if (err) throw err;
-  console.log("Collection created!");
-})})
 
-
-function encodeLatLon(point)
+function encodeLatLon(pointA,pointB)
 {
-  lat = point.lat
-  lng = point.lng
-  enc = "" + lat + "|" +lng
+  lat_A = pointA.lat
+  lng_A = pointA.lng
+  lat_B = pointB.lat
+  lng_B = pointB.lng
+  enc = "" + lat_A + "|" + lng_A + "|" +  lat_B + "|" +lng_B
   return enc
 }
 function getWeatherInCity(city)
@@ -149,38 +139,14 @@ app.post('/route', (req, response) => {
   dest_point = dest_response.results[0].geometry.location
   console.log("source : "+src_point + "source : "+dest_point)
 
-
-  let doc_already_exists = false
-  //Check if in database
-  var query = {src:encodeLatLon(src_point)};
-  var filtered_coll = dbo.collection("routes_store").find(query).limit(1)
-  var a
-  filtered_coll.toArray(function (err, result) {
-    if (err) throw err;
-    if(result.length != 0)
-    {
-      console.log("Retrived from Database")
-      res_obj = result.route_obj
-      res = result[0].route_obj
-      response.send(res)
-    }
-    else {
-
-      let map_promise =  getRouteAtoB(src_point, dest_point)
-      map_promise.then(function(result){
-        //add in database{
-        dbo.collection("routes_store").insertOne({ src:encodeLatLon(src_point), route_obj : result}, function(err, res) {
-          if (err) throw err;
-          console.log("1 route inserted at " + encodeLatLon(src_point));
-        })
-        response.send(result)
-      },function(err) {
-        console.log(err);
-      })
-      map_promise.catch(function(error) {
-        console.log(error);
-      })
-    }
+  let map_promise =  getRouteAtoB(src_point, dest_point)
+  map_promise.then(function(result){
+    response.send(result)
+  },function(err) {
+    console.log(err);
+  })
+  map_promise.catch(function(error) {
+    console.log(error);
   })
 })
 

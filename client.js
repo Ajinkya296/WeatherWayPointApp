@@ -101,7 +101,8 @@ function callback(response, status) {
   heavy_rain  :  'weather_icons/rainy-7.svg',
   snow        :  'weather_icons/snow.svg',
   fog         :  'weather_icons/fog.svg',
-  hazy        :  'weather_icons/hazy.svg'
+  hazy        :  'weather_icons/hazy.svg',
+  thunder     :  'weather_icons/thunder.svg'
   }
 
 
@@ -120,7 +121,9 @@ function callback(response, status) {
     lon = round(waypoints[i].lng(),2 )
 
     weather_info[i] =   weather_latlon(lat,lon)
-    if (weather_info[i].weather_desc.includes('mist'))
+    if(weather_info[i].weather_desc.includes('thunder'))
+      weather_info[i].icon = icons.thunder
+    else if (weather_info[i].weather_desc.includes('mist'))
       weather_info[i].icon = icons.fog
     else if (weather_info[i].weather_desc.includes('haze'))
         weather_info[i].icon = icons.hazy
