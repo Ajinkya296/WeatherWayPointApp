@@ -10,7 +10,7 @@ var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
 function encodeLatLon(pointA,pointB)
 {
-  
+
   lat_A = pointA.lat
   lng_A = pointA.lng
   lat_B = pointB.lat
@@ -106,6 +106,29 @@ app.post('/weather_city', (request, response) => {
     console.log(error);
   });
 })
+
+app.post('/rev_geocode', (request, response) => {
+  var temp
+  // Print the HTML for the Google homepage.
+  rev_geocode_url = geocode_url   + '&latlng=' +  request.query.lat + ',' +  request.query.lon + '&result_type=administrative_area_level_2|locality '
+  //console.log(rev_geocode_url)
+
+  request(rev_geocode_url, function (error, response, body) {
+  console.log('error:', error); // Print the error if one occurred
+  console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+  console.log('body:', body); // Print the HTML for the Google homepage.
+});
+
+  /*
+  var xhttp = new XMLHttpRequest();
+  xhttp.open("POST", rev_geocode_url, false);
+  xhttp.send()
+  geocode_response = JSON.parse(xhttp.responseText)
+  addr = geocode_response.results[0]*/
+  response.send(addr)
+})
+
+
 app.post('/weather_latlon', (request, response) => {
   var temp
   // Print the HTML for the Google homepage.

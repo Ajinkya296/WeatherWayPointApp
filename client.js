@@ -13,6 +13,32 @@ function round(num,dec)
   d = Math.pow(10, dec)
   return Math.round(num*d)/d
 }
+
+function get_addr(waypoints)
+{
+    address = []
+    for(i = 0 ; i < waypoints.length;i++)
+    {
+      url = "http://127.0.0.1:3000/rev_geocode?" + "lat=" +waypoints[i].lat() + "&lon=" +waypoints[i].lng()
+      var xhttp = new XMLHttpRequest();
+      xhttp.open("POST", url, false);/*
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+         // Typical action to be performed when the document is ready:
+        console.log( "--" + xhttp.responseText)
+        response = JSON.parse(xhttp.responseText) 
+        console.log(response.formatted_address.split(",",2).join())
+        address.push(response.formatted_address.split(",",2).join())
+        }
+      };*/
+      xhttp.send()
+      response = JSON.parse(xhttp.responseText) 
+      console.log(response.formatted_address.split(",",2).join())
+      address.push(response.formatted_address.split(",",2).join())
+    
+    }
+    return address
+}
 function weather_latlon(lat,lon)
 {
   var temperature
@@ -38,6 +64,100 @@ function weather_latlon(lat,lon)
 */
 }
 
+function render_weather(waypoints)
+{
+
+    var icons = {
+  clear       :  'weather_icons/clear.svg',
+  low_cloudy  :  'weather_icons/cloudy-day-1.svg',
+  high_cloudy :  'weather_icons/cloudy-day-3.svg',
+  light_rain  :  'weather_icons/rainy-4.svg',
+  heavy_rain  :  'weather_icons/rainy-7.svg',
+  snow        :  'weather_icons/snow.svg',
+  fog         :  'weather_icons/fog.svg',
+  hazy        :  'weather_icons/hazy.svg',
+  thunder     :  'weather_icons/thunder.svg'
+  } 
+    weather_info = []
+  
+
+  address = get_addr(waypoints)
+  console.log(address)
+  for(i = 0 ; i < waypoints.length;i++)
+  {
+    lat = round(waypoints[i].lat(),2 )
+    lon = round(waypoints[i].lng(),2 )
+
+    weather_info[i] =   weather_latlon(lat,lon)
+    if(weather_info[i].weather_desc.includes('thunder'))
+      weather_info[i].icon = icons.thunder
+    else if (weather_info[i].weather_desc.includes('mist'))
+      weather_info[i].icon = icons.fog
+    else if (weather_info[i].weather_desc.includes('haze'))
+        weather_info[i].icon = icons.hazy
+    else if (weather_info[i].weather_desc.includes('cloud'))
+        if (weather_info[i].weather_desc.includes('overcast') )
+          weather_info[i].icon = icons.high_cloudy
+        else {
+          weather_info[i].icon = icons.low_cloudy
+        }
+    else if (weather_info[i].weather_desc.includes('rain'))
+        if (weather_info[i].weather_desc.includes('light') )
+          weather_info[i].icon = icons.light_rain
+        else {
+          weather_info[i].icon = icons.heavy_rain
+        }
+    else {
+      weather_info[i].icon = icons.clear
+    }
+  }
+  for(i = 0 ; i < waypoints.length;i++)
+  {
+    var waypoint = waypoints[i]
+
+    var marker = new google.maps.Marker({
+          position: waypoint,
+          icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 6,
+              fillColor: 'yellow',
+              fillOpacity: 0.8,
+              strokeColor: 'blue',
+              strokeWeight: 2
+                },
+              draggable: false,
+              label: '',
+              map: map
+        }
+
+      );
+    //address.push(get_addr(waypoint.lat(),waypoint.lng()))
+      var contentString =   '<div id="content" style= " margin-left : -2px ;overflow:hidden;display:inline-block;">'+
+      '<div style= " margin-left : 5px">'+
+           '<p style="font-size:20px;">'+ address[i] +' </p>'+
+       '</div>' +
+           '<img src=" '+ weather_info[i].icon +'" style= " float:left;" height="32" width="32"> '+
+           '<div style="display:inline-block;">'+
+                '<span>'+ weather_info[i].temperature  +'<sup>o</sup> C '+ CapitlizeString(weather_info[i].weather_desc) +' </span></br>'+
+                '<span> Wind '+ round(weather_info[i].wind.speed * (25/11),1) +' miles/hr </span>'+
+            '</div>' +
+           '</div>'
+
+      var infowindow = new google.maps.InfoWindow();
+      google.maps.event.addListener(marker,'click', (function(marker,contentString,infowindow){
+                    return function() {
+                    infowindow.setContent(contentString);
+                    infowindow.open(map,marker);
+                  };
+                })(marker,contentString,infowindow));
+      google.maps.event.addListener(marker,'dblclick', (function(marker,contentString,infowindow){
+                    return function() {
+                    infowindow.close();
+                  };
+                })(marker,contentString,infowindow));
+        markers.push(marker)
+  }
+}
 var bounds = new google.maps.LatLngBounds();
 var polyline
 var markers
@@ -93,28 +213,21 @@ function callback(response, status) {
 }
   //---------------------- Splitting waypoints----------
 
-  var icons = {
-  clear       :  'weather_icons/clear.svg',
-  low_cloudy  :  'weather_icons/cloudy-day-1.svg',
-  high_cloudy :  'weather_icons/cloudy-day-3.svg',
-  light_rain  :  'weather_icons/rainy-4.svg',
-  heavy_rain  :  'weather_icons/rainy-7.svg',
-  snow        :  'weather_icons/snow.svg',
-  fog         :  'weather_icons/fog.svg',
-  hazy        :  'weather_icons/hazy.svg',
-  thunder     :  'weather_icons/thunder.svg'
-  }
 
 
   waypoints = []
   markers   = []
-  interval =  parseInt(path.length/4)
+  address   = []
+  interval =  parseInt(path.length/5)
   for(i=0;i<path.length;i+=interval)
   {
     waypoints.push(path[i])
   }
-  waypoints.push(path[path.length-1])
   weather_info = []
+  console.log("Getting weather")
+  render_weather(waypoints)
+  //setTimeout(render_weather(waypoints),0)
+/*  
   for(i = 0 ; i < waypoints.length;i++)
   {
     lat = round(waypoints[i].lat(),2 )
@@ -142,9 +255,7 @@ function callback(response, status) {
     else {
       weather_info[i].icon = icons.clear
     }
-    console.log(weather_info[i])
   }
-  console.log(weather_info)
   for(i = 0 ; i < waypoints.length;i++)
   {
     var waypoint = waypoints[i]
@@ -165,7 +276,11 @@ function callback(response, status) {
         }
 
       );
+    //address.push(get_addr(waypoint.lat(),waypoint.lng()))
       var contentString =   '<div id="content" style= " margin-left : -2px ;overflow:hidden;display:inline-block;">'+
+      '<div style= " margin-left : 5px">'+
+           '<p style="font-size:20px;">'+ address[i] +' </p>'+
+       '</div>' +
            '<img src=" '+ weather_info[i].icon +'" style= " float:left;" height="32" width="32"> '+
            '<div style="display:inline-block;">'+
                 '<span>'+ weather_info[i].temperature  +'<sup>o</sup> C '+ CapitlizeString(weather_info[i].weather_desc) +' </span></br>'+
@@ -177,7 +292,7 @@ function callback(response, status) {
       google.maps.event.addListener(marker,'click', (function(marker,contentString,infowindow){
                     return function() {
                     infowindow.setContent(contentString);
-                    infowindow.open(map,marker);
+                    infowindow.open(document.getElementById("map"),marker);
                   };
                 })(marker,contentString,infowindow));
       google.maps.event.addListener(marker,'dblclick', (function(marker,contentString,infowindow){
@@ -187,6 +302,11 @@ function callback(response, status) {
                 })(marker,contentString,infowindow));
         markers.push(marker)
     }
+    for(i = 0 ; i < waypoints.length;i++)
+    {
+      //address.push(get_addr(waypoints[i].lat(),waypoints[i].lng()))
+    }
+  */  
 }
 
 function submit_points()
@@ -195,7 +315,6 @@ function submit_points()
       console.log("Clicked")
       url = "http://127.0.0.1:3000/route?" + "source=" +document.getElementById("origin").value + "&dest="  +document.getElementById("dest").value
       axios.post(url).then(response => {
-        console.log(response)
         render_route(response,map) });
 
 }

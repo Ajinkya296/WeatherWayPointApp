@@ -131,6 +131,20 @@ app.post('/weather_latlon', (request, response) => {
   });
 })
 
+app.post('/rev_geocode', (request, response) => {
+  var temp
+  // Print the HTML for the Google homepage.
+  rev_geocode_url = geocode_url   + '&lat=' +  req.query.lat + '&lng=' +  req.query.lon
+  console.log(rev_geocode_url)
+  var xhttp = new XMLHttpRequest();
+  xhttp.open("POST", rev_geocode_url, false);
+  xhttp.send()
+  geocode_response = JSON.parse(xhttp.responseText)
+  addr = geocode_response.results[0]
+  console.log(addr)
+})
+
+
 app.post('/route', (req, response) => {
 
   src_url = geocode_url   + '&address=' +  req.query.source
