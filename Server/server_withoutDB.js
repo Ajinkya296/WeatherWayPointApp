@@ -18,26 +18,6 @@ function encodeLatLon(pointA,pointB)
   enc = "" + lat_A + "|" + lng_A + "|" +  lat_B + "|" +lng_B
   return enc
 }
-function getWeatherInCity(city)
-{
-
-  return new Promise(function(resolve, reject) {
-    req_url = weather_url+`&q=${city}`
-
-    request(req_url, function (err, response, body) {
-      if(err){
-        console.log('ERROR:', error);
-        reject(err)
-      }
-      else {
-        let weather = JSON.parse(body)
-        let message = `It's ${weather.main.temp} degrees in ${weather.name}!`;
-        let info    =  weather.main.temp;
-        resolve(info)
-      }
-    })
-  })
-}
 
 function getWeatherInLatLon(latitude,longitude)
 {
@@ -113,18 +93,12 @@ app.post('/rev_geocode', (request, response) => {
   rev_geocode_url = geocode_url   + '&latlng=' +  request.query.lat + ',' +  request.query.lon + '&result_type=administrative_area_level_2|locality '
   //console.log(rev_geocode_url)
 
-  request(rev_geocode_url, function (error, response, body) {
-  console.log('error:', error); // Print the error if one occurred
-  console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-  console.log('body:', body); // Print the HTML for the Google homepage.
-});
-
-  /*
+  
   var xhttp = new XMLHttpRequest();
   xhttp.open("POST", rev_geocode_url, false);
   xhttp.send()
   geocode_response = JSON.parse(xhttp.responseText)
-  addr = geocode_response.results[0]*/
+  addr = geocode_response.results[0]
   response.send(addr)
 })
 
@@ -153,14 +127,28 @@ app.post('/route', (req, response) => {
   var xhttp = new XMLHttpRequest();
   xhttp.open("POST", src_url, false);
   xhttp.send()
-  src_response = JSON.parse(xhttp.responseText)
-  src_point = src_response.results[0].geometry.location
 
+  src_response = JSON.parse(xhttp.responseText)
+  if(src_response.status != "ZERO_RESULTS"){
+  src_point = src_response.results[0].geometry.location
+  }
+  else
+  {
+    response.send(undefined)  
+    return
+  }
 
   xhttp.open("POST", dest_url, false);
   xhttp.send()
   dest_response = JSON.parse(xhttp.responseText)
+  if(dest_response.status != "ZERO_RESULTS"){
   dest_point = dest_response.results[0].geometry.location
+}
+  else
+  {
+    response.send(undefined)  
+    return
+  }
   console.log("source : "+src_point + "source : "+dest_point)
 
   let map_promise =  getRouteAtoB(src_point, dest_point)

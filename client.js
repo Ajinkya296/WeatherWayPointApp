@@ -16,7 +16,12 @@ function round(num,dec)
 
 function get_addr(waypoints)
 {
-    address = []
+    addresses = []
+
+    var ul = document.getElementById("list");
+    while ( ul.firstChild ) {
+    ul.removeChild( ul.firstChild );
+    }
     for(i = 0 ; i < waypoints.length;i++)
     {
       url = "http://127.0.0.1:3000/rev_geocode?" + "lat=" +waypoints[i].lat() + "&lon=" +waypoints[i].lng()
@@ -27,17 +32,27 @@ function get_addr(waypoints)
          // Typical action to be performed when the document is ready:
         console.log( "--" + xhttp.responseText)
         response = JSON.parse(xhttp.responseText) 
-        console.log(response.formatted_address.split(",",2).join())
-        address.push(response.formatted_address.split(",",2).join())
-        }
+        locality = response.formatted_address.split(",",2).join()
+      addresses.push(locality)
+      var ul = document.getElementById("list");
+      var li = document.createElement("li");
+      li.appendChild(document.createTextNode(locality));
+      li.setAttribute("class", "list-group-item"); // added line
+      ul.appendChild(li);
       };*/
+
       xhttp.send()
       response = JSON.parse(xhttp.responseText) 
-      console.log(response.formatted_address.split(",",2).join())
-      address.push(response.formatted_address.split(",",2).join())
-    
+      locality = response.formatted_address.split(",",2).join()
+      addresses.push(locality)
+      var li = document.createElement("li");
+      li.appendChild(document.createTextNode(locality));
+      li.setAttribute("class", "list-group-item"); // added line
+      ul.appendChild(li);
     }
-    return address
+    console.log(addresses)
+    return addresses
+    
 }
 function weather_latlon(lat,lon)
 {
@@ -45,6 +60,7 @@ function weather_latlon(lat,lon)
   var wind
   var wind_dir
   var weather_desc
+  var city
   url = "http://127.0.0.1:3000/weather_latlon?" + "lat=" +lat + "&lon=" +lon
 
   var xhttp = new XMLHttpRequest();
@@ -53,9 +69,10 @@ function weather_latlon(lat,lon)
   response = JSON.parse(xhttp.responseText)
   temperature = response.main.temp
   wind  = response.wind
+  city  = response.name
   weather_summ =  response.weather[0].main
   weather_desc =  response.weather[0].description
-  return {temperature,wind,weather_summ,weather_desc}
+  return {temperature,wind,weather_summ,weather_desc,city}
   /*
   return  axios.post(url).then( response => {
                                     return response.data//
@@ -81,7 +98,7 @@ function render_weather(waypoints)
     weather_info = []
   
 
-  address = get_addr(waypoints)
+  //address = get_addr(waypoints)
   console.log(address)
   for(i = 0 ; i < waypoints.length;i++)
   {
@@ -111,6 +128,7 @@ function render_weather(waypoints)
       weather_info[i].icon = icons.clear
     }
   }
+
   for(i = 0 ; i < waypoints.length;i++)
   {
     var waypoint = waypoints[i]
@@ -131,10 +149,11 @@ function render_weather(waypoints)
         }
 
       );
-    //address.push(get_addr(waypoint.lat(),waypoint.lng()))
+
+
       var contentString =   '<div id="content" style= " margin-left : -2px ;overflow:hidden;display:inline-block;">'+
       '<div style= " margin-left : 5px">'+
-           '<p style="font-size:20px;">'+ address[i] +' </p>'+
+           '<p style="font-size:20px;">'+ weather_info[i].city +' </p>'+
        '</div>' +
            '<img src=" '+ weather_info[i].icon +'" style= " float:left;" height="32" width="32"> '+
            '<div style="display:inline-block;">'+
@@ -155,7 +174,10 @@ function render_weather(waypoints)
                     infowindow.close();
                   };
                 })(marker,contentString,infowindow));
+
         markers.push(marker)
+
+
   }
 }
 var bounds = new google.maps.LatLngBounds();
@@ -218,11 +240,12 @@ function callback(response, status) {
   waypoints = []
   markers   = []
   address   = []
-  interval =  parseInt(path.length/5)
+  interval =  parseInt(path.length/8)
   for(i=0;i<path.length;i+=interval)
   {
     waypoints.push(path[i])
   }
+  waypoints.push(path[path.length-1])
   weather_info = []
   console.log("Getting weather")
   render_weather(waypoints)
@@ -313,9 +336,22 @@ function submit_points()
 {
       //initialize()
       console.log("Clicked")
+      var start = new Date().getTime();
       url = "http://127.0.0.1:3000/route?" + "source=" +document.getElementById("origin").value + "&dest="  +document.getElementById("dest").value
       axios.post(url).then(response => {
-        render_route(response,map) });
+                                        console.log(response)
+                                        if(response.data=="")
+                                           {
+                                            alert("Check you source and destination spelling")
+                                            //document.location.reload(true)
+                                           }     
+                                        else {
+                                              render_route(response,map) 
+                                              var end = new Date().getTime();
+                                              var time = end - start;
+                                              console.log('Execution time: ' + time/1000 +" seconds");
+                                            }   
+                                      }); 
 
 }
 /*
