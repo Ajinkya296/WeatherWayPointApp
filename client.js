@@ -58,9 +58,17 @@ function addtoDOMlist(city,icon){
   var ch = document.getElementById("cities").innerHTML = "Cities on route";
   var ul = document.getElementById("list");
   var li = document.createElement("li");
-  li.appendChild(document.createTextNode(city));
+  var elem = document.createElement("img");
+  var div_elem = document.createElement("div");
+  elem.src = icon;
+  elem.setAttribute("style" ,  " float:right; height:50; width:50")
+
+  div_elem.appendChild(document.createTextNode(city));
+  div_elem.appendChild(elem)
+  item = city + elem
+  li.appendChild(div_elem);
   li.setAttribute("class", "list-group-item"); // added line
-  li.setAttribute("style", "background-color:#a4b0be; color: #fafafa;font-size: 1.25em ;  padding: 0.5rem 0.5rem;");
+  li.setAttribute("style", "background-color:#f1f2f6; color: #495057;font-size: 1.25em ;  padding: 0.5rem 0.5rem;");
   ul.appendChild(li);
 }
 
