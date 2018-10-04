@@ -161,7 +161,7 @@ function render_weather(waypoints)
           position: waypoint,
           icon: {
               path: google.maps.SymbolPath.CIRCLE,
-              scale: 6,
+              scale: 7,
               fillColor: 'yellow',
               fillOpacity: 0.8,
               strokeColor: 'blue',
@@ -179,10 +179,10 @@ function render_weather(waypoints)
       '<div style= " margin-left : 5px">'+
            '<p style="font-size:20px;">'+ weather_info[i].city +' </p>'+
        '</div>' +
-           '<img src=" '+ weather_info[i].icon +'" style= " float:left;" height="32" width="32"> '+
+           '<img src=" '+ weather_info[i].icon +'" style= " float:left;" height="40" width="40"> '+
            '<div style="display:inline-block;">'+
-                '<span>'+ weather_info[i].temperature  +'<sup>o</sup> C '+ CapitlizeString(weather_info[i].weather_desc) +' </span></br>'+
-                '<span> Wind '+ round(weather_info[i].wind.speed * (25/11),1) +' miles/hr </span>'+
+                '<span style = "font-size: 1.25em ;">'+ weather_info[i].temperature  +'<sup>o</sup> F '+ CapitlizeString(weather_info[i].weather_desc) +' </span></br>'+
+                '<span  style = "font-size: 1.25em ;"> Wind '+ round(weather_info[i].wind.speed * (25/11),1) +' miles/hr </span>'+
             '</div>' +
            '</div>'
 
@@ -229,6 +229,7 @@ function render_route(response,map)
     alert("Sorry! No roads routues found.")
     return
   }
+  console.log(response.data.routes[0].legs)
   var lat
   var lng
   jsonData =  response.data.routes[0].overview_polyline

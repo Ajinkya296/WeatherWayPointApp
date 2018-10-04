@@ -149,25 +149,37 @@ app.post('/route', (req, response) => {
 
   src_url = geocode_url   + '&address=' +  req.query.source
   dest_url = geocode_url  + '&address=' +  req.query.dest
-  console.log(src_url)
   var xhttp = new XMLHttpRequest();
   xhttp.open("POST", src_url, false);
   xhttp.send()
-  src_response = JSON.parse(xhttp.responseText)
-  src_point = src_response.results[0].geometry.location
 
+  src_response = JSON.parse(xhttp.responseText)
+  if(src_response.status != "ZERO_RESULTS"){
+  src_point = src_response.results[0].geometry.location
+  }
+  else
+  {
+    response.send(undefined)  
+    return
+  }
 
   xhttp.open("POST", dest_url, false);
   xhttp.send()
   dest_response = JSON.parse(xhttp.responseText)
+  if(dest_response.status != "ZERO_RESULTS"){
   dest_point = dest_response.results[0].geometry.location
+}
+  else
+  {
+    response.send(undefined)  
+    return
+  }
   console.log("source : "+src_point + "source : "+dest_point)
 
 
   //Check if in database
   var query = {src:encodeLatLon(src_point, dest_point)};
   var filtered_coll = dbo.collection("routes_store").find(query).limit(1)
-  var a
   filtered_coll.toArray(function (err, result) {
     if (err) throw err;
     if(result.length != 0)

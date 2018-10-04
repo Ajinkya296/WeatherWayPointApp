@@ -123,7 +123,6 @@ app.post('/route', (req, response) => {
 
   src_url = geocode_url   + '&address=' +  req.query.source
   dest_url = geocode_url  + '&address=' +  req.query.dest
-  console.log(src_url)
   var xhttp = new XMLHttpRequest();
   xhttp.open("POST", src_url, false);
   xhttp.send()
