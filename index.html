@@ -11,7 +11,7 @@
     console.log("Map init")
     var myLatlng = new google.maps.LatLng(37.0902,-95.7129);
     var myOptions = {
-        zoom: 5,
+        zoom: 4,
         center: myLatlng,
         mapTypeId: google.maps.MapTypeId.ROADMAP
     }
@@ -27,38 +27,52 @@
 
 <body onload="initialize()">
 
-<div class="container">
+<div class="">
 
-  <div class="row mt-5">
+  <div class="row ml-3 mr-0">
 
-    <div class="col-4">
-      <h5 class="text-center">From</h5>
-      <input type="text" id="origin" class="form-control mr-sm-2" value="Buffalo">
-      </br>
-      <h5 class="text-center">To</h5>
-      <input type="text" id="dest" class="form-control mr-sm-2" value="Green Bay"><br>
+      <div class="col-4" style=" padding-right: 0px; 
+    padding-left: 0px; "  > 
 
-      <div class="row ">
-        <div class="col ">
-          <button class="btn btn-primary btn-lg btn-block" onclick="  submit_points()" >Submit</button>
-        </div>
+        <div class="row " style=" padding-right: 0px; 
+    padding-left: 0px; " >
+          <div class="col" style="background-color:#1B9CFC"></br></br>
+            <h5 class="text-center"  style="color:#f5f6fa">From</h5>
+            <input type="text" id="origin" class="form-control mr-sm-2" value="Buffalo">
+            </br>
+            <h5 class="text-center" style="color:#f5f6fa" >To</h5>
+            <input type="text" id="dest" class="form-control mr-sm-2" value="Green Bay"><br>
+
+            <div class="row ">
+              <div class="col ">
+                <button class="btn btn-primary btn-lg btn-block"  style="background-color:#4cd137;font-size: 1.5em;"onclick="  submit_points()" >Find a Route</button>
+              </div>
+            </div>
+           
+            <p id = "result"> </p>
+          </div>
+          </div>
+
+        <div class="row mt-3">
+          <div class="col">
+           <h4 class="text-center" id="cities" style="color:#495057"></h4> 
+           <ul class="list-group text-center col-8 mt-2 ml-5" style="margin-left: 50px ;"id="list">
+            </ul>
+        </div>  
       </div>
-      <ul class="list-group mt-5" id="list">
-      </ul>
-      <p id = "result"> </p>
-    </div>
-    <div class="col-8" >
+      </div>
+
+    <div  class= "col-8 ml-auto" style=" width: 100%; height: 100%">
       
       <div id="map" style=" border-style:solid;
-    border-width:10px;  
-    border-color:#4b6584;width 100%; height: 80%"> </div>
+    border-width:0px;  
+    border-color:#4b6584;width: 100%; height: 100%"> </div>
     </div>
   </div>
   
   </div>
 
 </div>
-<div class="form-group">
 
 
 </body>

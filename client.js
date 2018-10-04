@@ -54,6 +54,21 @@ function get_addr(waypoints)
     return addresses
     
 }
+function addtoDOMlist(city,icon){
+  var ch = document.getElementById("cities").innerHTML = "Cities on route";
+  var ul = document.getElementById("list");
+  var li = document.createElement("li");
+  li.appendChild(document.createTextNode(city));
+  li.setAttribute("class", "list-group-item"); // added line
+  li.setAttribute("style", "background-color:#a4b0be; color: #fafafa;font-size: 1.25em ;  padding: 0.5rem 0.5rem;");
+  ul.appendChild(li);
+}
+
+function resetDOMlist(){
+  var ch = document.getElementById("cities").innerHTML = "";
+  var ul = document.getElementById("list");
+  ul.innerHTML = ''
+}
 function weather_latlon(lat,lon)
 {
   var temperature
@@ -72,6 +87,7 @@ function weather_latlon(lat,lon)
   city  = response.name
   weather_summ =  response.weather[0].main
   weather_desc =  response.weather[0].description
+
   return {temperature,wind,weather_summ,weather_desc,city}
   /*
   return  axios.post(url).then( response => {
@@ -99,7 +115,6 @@ function render_weather(waypoints)
   
 
   //address = get_addr(waypoints)
-  console.log(address)
   for(i = 0 ; i < waypoints.length;i++)
   {
     lat = round(waypoints[i].lat(),2 )
@@ -127,6 +142,7 @@ function render_weather(waypoints)
     else {
       weather_info[i].icon = icons.clear
     }
+      setTimeout(addtoDOMlist(weather_info[i].city,weather_info[i].icon),0)
   }
 
   for(i = 0 ; i < waypoints.length;i++)
@@ -199,6 +215,12 @@ function render_route(response,map)
         markers[i].setMap(null)
     }
   }
+  console.log(response.data)
+  if(response.data.status == "ZERO_RESULTS")
+  {
+    alert("Sorry! No roads routues found.")
+    return
+  }
   var lat
   var lng
   jsonData =  response.data.routes[0].overview_polyline
@@ -221,7 +243,7 @@ function render_route(response,map)
       // strokeWeight: 2
   });
   polyline.setMap(map);
-
+/*
   var service = new google.maps.DistanceMatrixService();
   service.getDistanceMatrix(
   {
@@ -232,7 +254,7 @@ function render_route(response,map)
 
 function callback(response, status) {
   document.getElementById("result").innerHTML = "Distance is " + response.rows[0].elements[0].distance.text + "\n" + "Time required " + response.rows[0].elements[0].duration.text
-}
+}*/
   //---------------------- Splitting waypoints----------
 
 
@@ -247,7 +269,6 @@ function callback(response, status) {
   }
   waypoints.push(path[path.length-1])
   weather_info = []
-  console.log("Getting weather")
   render_weather(waypoints)
   //setTimeout(render_weather(waypoints),0)
 /*  
@@ -335,17 +356,16 @@ function callback(response, status) {
 function submit_points()
 {
       //initialize()
-      console.log("Clicked")
       var start = new Date().getTime();
       url = "http://127.0.0.1:3000/route?" + "source=" +document.getElementById("origin").value + "&dest="  +document.getElementById("dest").value
       axios.post(url).then(response => {
-                                        console.log(response)
                                         if(response.data=="")
                                            {
-                                            alert("Check you source and destination spelling")
+                                            alert("Check your source and destination spelling")
                                             //document.location.reload(true)
                                            }     
                                         else {
+                                              resetDOMlist()
                                               render_route(response,map) 
                                               var end = new Date().getTime();
                                               var time = end - start;
