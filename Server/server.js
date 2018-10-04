@@ -18,6 +18,9 @@ dbo.createCollection("routes_store", function(err, res) {
   if (err) throw err;
   console.log("Collection created!");
 })})
+
+
+
 function encodeLatLon(pointA,pointB)
 {
   lat_A = pointA.lat
@@ -27,26 +30,7 @@ function encodeLatLon(pointA,pointB)
   enc = "" + lat_A + "|" + lng_A + "|" +  lat_B + "|" +lng_B
   return enc
 }
-function getWeatherInCity(city)
-{
 
-  return new Promise(function(resolve, reject) {
-    req_url = weather_url+`&q=${city}`
-
-    request(req_url, function (err, response, body) {
-      if(err){
-        console.log('ERROR:', error);
-        reject(err)
-      }
-      else {
-        let weather = JSON.parse(body)
-        let message = `It's ${weather.main.temp} degrees in ${weather.name}!`;
-        let info    =  weather.main.temp;
-        resolve(info)
-      }
-    })
-  })
-}
 
 function getWeatherInLatLon(latitude,longitude)
 {
@@ -101,20 +85,6 @@ app.get('/', (request, response) => {
   response.send('Hello from Express!')
 })
 
-app.post('/weather_city', (request, response) => {
-  var temp
-  let weather_promise =  getWeatherInCity(request.query.city)
-  weather_promise.then(function(result){
-    temp = result
-    console.log('--'+temp)
-    response.send('Its '+ temp + ' in ' +request.query.city)
-  },function(err) {
-    console.log(err);
-  })
-  weather_promise.catch(function(error) {
-    console.log(error);
-  });
-})
 app.post('/weather_latlon', (request, response) => {
   var temp
   // Print the HTML for the Google homepage.

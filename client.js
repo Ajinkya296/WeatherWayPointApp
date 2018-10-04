@@ -1,59 +1,14 @@
-function submit_city()
-{
-  console.log("Clicked")
-  url = "http://127.0.0.1:3000/submit?" + "city=" +document.getElementById("city").value
-  axios.post(url).then(response => console.log(response.data));
-}
 function CapitlizeString(word)
 {
     return word.charAt(0).toUpperCase() + word.slice(1);
 }
+
 function round(num,dec)
 {
   d = Math.pow(10, dec)
   return Math.round(num*d)/d
 }
 
-function get_addr(waypoints)
-{
-    addresses = []
-
-    var ul = document.getElementById("list");
-    while ( ul.firstChild ) {
-    ul.removeChild( ul.firstChild );
-    }
-    for(i = 0 ; i < waypoints.length;i++)
-    {
-      url = "http://127.0.0.1:3000/rev_geocode?" + "lat=" +waypoints[i].lat() + "&lon=" +waypoints[i].lng()
-      var xhttp = new XMLHttpRequest();
-      xhttp.open("POST", url, false);/*
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-         // Typical action to be performed when the document is ready:
-        console.log( "--" + xhttp.responseText)
-        response = JSON.parse(xhttp.responseText) 
-        locality = response.formatted_address.split(",",2).join()
-      addresses.push(locality)
-      var ul = document.getElementById("list");
-      var li = document.createElement("li");
-      li.appendChild(document.createTextNode(locality));
-      li.setAttribute("class", "list-group-item"); // added line
-      ul.appendChild(li);
-      };*/
-
-      xhttp.send()
-      response = JSON.parse(xhttp.responseText) 
-      locality = response.formatted_address.split(",",2).join()
-      addresses.push(locality)
-      var li = document.createElement("li");
-      li.appendChild(document.createTextNode(locality));
-      li.setAttribute("class", "list-group-item"); // added line
-      ul.appendChild(li);
-    }
-    console.log(addresses)
-    return addresses
-    
-}
 function addtoDOMlist(city,icon){
   var ch = document.getElementById("cities").innerHTML = "Cities on route";
   var ul = document.getElementById("list");
@@ -67,7 +22,7 @@ function addtoDOMlist(city,icon){
   div_elem.appendChild(elem)
   item = city + elem
   li.appendChild(div_elem);
-  li.setAttribute("class", "list-group-item"); // added line
+  li.setAttribute("class", "list-group-item"); 
   li.setAttribute("style", "background-color:#f1f2f6; color: #495057;font-size: 1.25em ;  padding: 0.5rem 0.5rem;");
   ul.appendChild(li);
 }
@@ -77,6 +32,11 @@ function resetDOMlist(){
   var ul = document.getElementById("list");
   ul.innerHTML = ''
 }
+
+
+/*
+Returns temp,wind,weather_summary,description,city for a particular lat,lon
+*/
 function weather_latlon(lat,lon)
 {
   var temperature
@@ -97,18 +57,12 @@ function weather_latlon(lat,lon)
   weather_desc =  response.weather[0].description
 
   return {temperature,wind,weather_summ,weather_desc,city}
-  /*
-  return  axios.post(url).then( response => {
-                                    return response.data//
-                                  });
-  console.log({temperature,wind,weather_desc})
-*/
 }
 
 function render_weather(waypoints)
 {
 
-    var icons = {
+  var icons = {
   clear       :  'weather_icons/clear.svg',
   low_cloudy  :  'weather_icons/cloudy-day-1.svg',
   high_cloudy :  'weather_icons/cloudy-day-3.svg',
@@ -119,16 +73,16 @@ function render_weather(waypoints)
   hazy        :  'weather_icons/hazy.svg',
   thunder     :  'weather_icons/thunder.svg'
   } 
-    weather_info = []
+  weather_info = []
   
-
-  //address = get_addr(waypoints)
   for(i = 0 ; i < waypoints.length;i++)
   {
     lat = round(waypoints[i].lat(),2 )
     lon = round(waypoints[i].lng(),2 )
 
     weather_info[i] =   weather_latlon(lat,lon)
+
+    //------------------Set icons wrt weather descriptions----------------
     if(weather_info[i].weather_desc.includes('thunder'))
       weather_info[i].icon = icons.thunder
     else if (weather_info[i].weather_desc.includes('mist'))
@@ -150,13 +104,15 @@ function render_weather(waypoints)
     else {
       weather_info[i].icon = icons.clear
     }
-      setTimeout(addtoDOMlist(weather_info[i].city,weather_info[i].icon),0)
+    //------------------------------------------------------------------------
+      setTimeout(addtoDOMlist(weather_info[i].city,weather_info[i].icon),50)
+
   }
 
+  //------------Add marker and weather infowindow for every waypoint---------------- 
   for(i = 0 ; i < waypoints.length;i++)
   {
     var waypoint = waypoints[i]
-
     var marker = new google.maps.Marker({
           position: waypoint,
           icon: {
@@ -175,16 +131,16 @@ function render_weather(waypoints)
       );
 
 
-      var contentString =   '<div id="content" style= " margin-left : -2px ;overflow:hidden;display:inline-block;">'+
-      '<div style= " margin-left : 5px">'+
-           '<p style="font-size:20px;">'+ weather_info[i].city +' </p>'+
-       '</div>' +
-           '<img src=" '+ weather_info[i].icon +'" style= " float:left;" height="40" width="40"> '+
-           '<div style="display:inline-block;">'+
-                '<span style = "font-size: 1.25em ;">'+ weather_info[i].temperature  +'<sup>o</sup> F '+ CapitlizeString(weather_info[i].weather_desc) +' </span></br>'+
-                '<span  style = "font-size: 1.25em ;"> Wind '+ round(weather_info[i].wind.speed * (25/11),1) +' miles/hr </span>'+
-            '</div>' +
-           '</div>'
+      var contentString ='<div id="content" style= " margin-left : -2px ;overflow:hidden;display:inline-block;">'+
+                            '<div style= " margin-left : 5px">'+
+                              '<p style="font-size:20px;">'+ weather_info[i].city +' </p>'+
+                            '</div>' +
+                            '<img src=" '+ weather_info[i].icon +'" style= " float:left;" height="40" width="40"> '+
+                            '<div style="display:inline-block;">'+
+                              '<span style = "font-size: 1.25em ;">'+ weather_info[i].temperature  +'<sup>o</sup> F &nbsp'+ CapitlizeString(weather_info[i].weather_desc) +' </span></br>'+
+                              '<span  style = "font-size: 1.25em ;"> Wind '+ round(weather_info[i].wind.speed * (25/11),1) +' miles/hr </span>'+
+                            '</div>' +
+                        '</div>'
 
       var infowindow = new google.maps.InfoWindow();
       google.maps.event.addListener(marker,'click', (function(marker,contentString,infowindow){
@@ -200,16 +156,19 @@ function render_weather(waypoints)
                 })(marker,contentString,infowindow));
 
         markers.push(marker)
-
-
   }
 }
+
+
+
+
 var bounds = new google.maps.LatLngBounds();
 var polyline
 var markers
+
 function render_route(response,map)
 {
-
+  //------------Reset previous rendering-------------
   if(polyline != undefined)
   {
     console.log("Removed")
@@ -223,13 +182,21 @@ function render_route(response,map)
         markers[i].setMap(null)
     }
   }
-  console.log(response.data)
+  //---------------------------------------------------
+
+
+  //----------------Empty response check--------------
   if(response.data.status == "ZERO_RESULTS")
   {
-    alert("Sorry! No roads routues found.")
+    alert("Sorry! No road routues found.")
     return
   }
-  console.log(response.data.routes[0].legs)
+  //---------------------------------------------------
+
+
+
+  //------------------Rendering route polyline ---------------
+
   var lat
   var lng
   jsonData =  response.data.routes[0].overview_polyline
@@ -237,6 +204,7 @@ function render_route(response,map)
   for (var i = 0; i < path.length; i++) {
     bounds.extend(path[i]);
   }
+
   map.panTo(path[0])
   map.fitBounds(bounds);
   polyline = new google.maps.Polyline({
@@ -247,26 +215,15 @@ function render_route(response,map)
     fillColor: '#FF0000',
     fillOpacity: 0.35,
     map: map
-      // strokeColor: "#0000FF",
-      // strokeOpacity: 1.0,
-      // strokeWeight: 2
   });
   polyline.setMap(map);
-/*
-  var service = new google.maps.DistanceMatrixService();
-  service.getDistanceMatrix(
-  {
-    origins: [path[0]],
-    destinations: [path[path.length-1]],
-    travelMode: 'DRIVING'
-  }, callback);
 
-function callback(response, status) {
-  document.getElementById("result").innerHTML = "Distance is " + response.rows[0].elements[0].distance.text + "\n" + "Time required " + response.rows[0].elements[0].duration.text
-}*/
-  //---------------------- Splitting waypoints----------
+  //---------------------------------------------------
 
 
+
+  //----------------------Getting Waypoints Info----------------
+  /* Every 12.5% point is chosen to be a waypoint and its weather info is extracted*/
 
   waypoints = []
   markers   = []
@@ -279,99 +236,24 @@ function callback(response, status) {
   waypoints.push(path[path.length-1])
   weather_info = []
   render_weather(waypoints)
-  //setTimeout(render_weather(waypoints),0)
-/*  
-  for(i = 0 ; i < waypoints.length;i++)
-  {
-    lat = round(waypoints[i].lat(),2 )
-    lon = round(waypoints[i].lng(),2 )
 
-    weather_info[i] =   weather_latlon(lat,lon)
-    if(weather_info[i].weather_desc.includes('thunder'))
-      weather_info[i].icon = icons.thunder
-    else if (weather_info[i].weather_desc.includes('mist'))
-      weather_info[i].icon = icons.fog
-    else if (weather_info[i].weather_desc.includes('haze'))
-        weather_info[i].icon = icons.hazy
-    else if (weather_info[i].weather_desc.includes('cloud'))
-        if (weather_info[i].weather_desc.includes('overcast') )
-          weather_info[i].icon = icons.high_cloudy
-        else {
-          weather_info[i].icon = icons.low_cloudy
-        }
-    else if (weather_info[i].weather_desc.includes('rain'))
-        if (weather_info[i].weather_desc.includes('light') )
-          weather_info[i].icon = icons.light_rain
-        else {
-          weather_info[i].icon = icons.heavy_rain
-        }
-    else {
-      weather_info[i].icon = icons.clear
-    }
-  }
-  for(i = 0 ; i < waypoints.length;i++)
-  {
-    var waypoint = waypoints[i]
-
-    var marker = new google.maps.Marker({
-          position: waypoint,
-          icon: {
-      path: google.maps.SymbolPath.CIRCLE,
-      scale: 6,
-      fillColor: 'yellow',
-    fillOpacity: 0.8,
-    strokeColor: 'blue',
-    strokeWeight: 2
-    },
-          draggable: false,
-          label: '',
-          map: map
-        }
-
-      );
-    //address.push(get_addr(waypoint.lat(),waypoint.lng()))
-      var contentString =   '<div id="content" style= " margin-left : -2px ;overflow:hidden;display:inline-block;">'+
-      '<div style= " margin-left : 5px">'+
-           '<p style="font-size:20px;">'+ address[i] +' </p>'+
-       '</div>' +
-           '<img src=" '+ weather_info[i].icon +'" style= " float:left;" height="32" width="32"> '+
-           '<div style="display:inline-block;">'+
-                '<span>'+ weather_info[i].temperature  +'<sup>o</sup> C '+ CapitlizeString(weather_info[i].weather_desc) +' </span></br>'+
-                '<span> Wind '+ round(weather_info[i].wind.speed * (25/11),1) +' miles/hr </span>'+
-            '</div>' +
-           '</div>'
-
-      var infowindow = new google.maps.InfoWindow();
-      google.maps.event.addListener(marker,'click', (function(marker,contentString,infowindow){
-                    return function() {
-                    infowindow.setContent(contentString);
-                    infowindow.open(document.getElementById("map"),marker);
-                  };
-                })(marker,contentString,infowindow));
-      google.maps.event.addListener(marker,'dblclick', (function(marker,contentString,infowindow){
-                    return function() {
-                    infowindow.close();
-                  };
-                })(marker,contentString,infowindow));
-        markers.push(marker)
-    }
-    for(i = 0 ; i < waypoints.length;i++)
-    {
-      //address.push(get_addr(waypoints[i].lat(),waypoints[i].lng()))
-    }
-  */  
+  //---------------------------------------------------
 }
+
+/*
+1. Asynchronously submits source and destination values to server to get route between them from server
+    If no response comes back that mean there was a spelling error
+2. Renders the route on the map from response of server
+*/
 
 function submit_points()
 {
-      //initialize()
       var start = new Date().getTime();
       url = "http://127.0.0.1:3000/route?" + "source=" +document.getElementById("origin").value + "&dest="  +document.getElementById("dest").value
       axios.post(url).then(response => {
                                         if(response.data=="")
                                            {
                                             alert("Check your source and destination spelling")
-                                            //document.location.reload(true)
                                            }     
                                         else {
                                               resetDOMlist()
@@ -383,57 +265,4 @@ function submit_points()
                                       }); 
 
 }
-/*
-function initMap() {
-  var pointA = new google.maps.LatLng(51.7519, -1.2578),
-    pointB = new google.maps.LatLng(50.8429, -0.1313),
-    myOptions = {
-      zoom: 7,
-      center: pointA
-    },
-    map = new google.maps.Map(document.getElementById('map-canvas'), myOptions),
-    // Instantiate a directions service.
-    directionsService = new google.maps.DirectionsService,
-    directionsDisplay = new google.maps.DirectionsRenderer({
-      map: map
-    }),
-    markerA = new google.maps.Marker({
-      position: pointA,
-      title: "point A",
-      label: "A",
-      map: map
-    }),
-    markerB = new google.maps.Marker({
-      position: pointB,
-      title: "point B",
-      label: "B",
-      map: map
-    });
 
-  // get route from A to B
-  calculateAndDisplayRoute(directionsService, directionsDisplay, pointA, pointB);
-
-}
-
-
-
-function calculateAndDisplayRoute(directionsService, directionsDisplay, pointA, pointB) {
-  directionsService.route({
-    origin: pointA,
-    destination: pointB,
-    travelMode: google.maps.TravelMode.DRIVING
-  }, function(response, status) {
-    if (status == google.maps.DirectionsStatus.OK) {
-      directionsDisplay.setDirections(response);
-    } else {
-      window.alert('Directions request failed due to ' + status);
-    }
-  });
-}
-
-initMap();
-*/
-function test()
-{
-  console.log("works")
-}

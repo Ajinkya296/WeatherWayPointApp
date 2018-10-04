@@ -72,20 +72,6 @@ app.get('/', (request, response) => {
   response.send('Hello from Express!')
 })
 
-app.post('/weather_city', (request, response) => {
-  var temp
-  let weather_promise =  getWeatherInCity(request.query.city)
-  weather_promise.then(function(result){
-    temp = result
-    console.log('--'+temp)
-    response.send('Its '+ temp + ' in ' +request.query.city)
-  },function(err) {
-    console.log(err);
-  })
-  weather_promise.catch(function(error) {
-    console.log(error);
-  });
-})
 
 app.post('/rev_geocode', (request, response) => {
   var temp
